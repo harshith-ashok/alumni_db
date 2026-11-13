@@ -3,7 +3,6 @@ import type { AlumniRecord, ColumnDef, Role } from '@/lib/schema/types'
 /** Pure RBAC rules. Mirrored by backend/Code.gs — keep both in sync. */
 
 export const can = {
-  readAlumni: (_role: Role) => true,
   writeAlumni: (role: Role) => role === 'editor' || role === 'admin',
   manageSchema: (role: Role) => role === 'admin',
   manageUsers: (role: Role) => role === 'admin',

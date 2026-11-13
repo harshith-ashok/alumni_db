@@ -75,7 +75,7 @@ const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
 
 export const mockIdentity = {
   get: () => { try { return localStorage.getItem(ID_KEY) } catch { return null } },
-  set: (email: string | null) => { try { email ? localStorage.setItem(ID_KEY, email) : localStorage.removeItem(ID_KEY) } catch { /* noop */ } },
+  set: (email: string | null) => { try { if (email) localStorage.setItem(ID_KEY, email); else localStorage.removeItem(ID_KEY) } catch { /* noop */ } },
   demoUsers: () => load().users,
 }
 
