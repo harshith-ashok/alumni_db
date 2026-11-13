@@ -43,3 +43,16 @@ export function buildRecordSchema(cols: ColumnDef[]) {
   }
   return z.object(shape)
 }
+
+/** Server-side value check (used by the mock backend; Code.gs mirrors it). Returns an error message or null. */
+export function checkValue(c: ColumnDef, v: unknown): string | null {
+  if (v === null || v === undefined || v === '') return null
+  switch (c.type) {
+    case 'email': return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(v)) ? null : `${c.label} must be a valid email`
+    case 'url': return /^https?:\/\/\S+$/i.test(String(v)) ? null : `${c.label} must be a http(s) URL`
+    case 'number': return Number.isFinite(Number(v)) ? null : `${c.label} must be a number`
+    case 'select': return !c.options?.length || c.options.includes(String(v)) ? null : `${c.label}: "${v}" is not an allowed option`
+    case 'multiselect': return Array.isArray(v) && (!c.options?.length || v.every((x) => c.options!.includes(String(x)))) ? null : `${c.label} has an invalid option`
+    default: return null
+  }
+}

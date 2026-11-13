@@ -11,6 +11,7 @@ import { useSession } from '@/lib/auth/useAuth'
 import { useAlumni, useSchema } from '@/lib/data/hooks'
 import { CellView } from './cells'
 import { applyView, filterOptions, type ViewState } from './query'
+import { ExportButton, ImportButton } from './ImportExport'
 import { RecordSheet, type SheetMode } from './RecordSheet'
 
 const PAGE = 25
@@ -90,6 +91,8 @@ export function AlumniTable() {
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+          <ExportButton rows={rows} cols={cols} />
+          {canWrite && <ImportButton cols={cols} />}
           {canWrite && <Button onClick={() => setMode({ type: 'create' })}><Plus /> Add alumnus</Button>}
         </div>
       </div>

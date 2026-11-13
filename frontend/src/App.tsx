@@ -22,6 +22,7 @@ export default function App() {
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="*" element={<div className="grid min-h-svh place-items-center text-muted-foreground">Page not found</div>} />
                 <Route element={<RequireAuth />}>
                   <Route element={<AppShell />}>
                     <Route index element={<AlumniPage />} />

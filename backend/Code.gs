@@ -208,7 +208,7 @@ function safeValues_(values, cols, role, partial) {
   cols.forEach(function (c) {
     if (!(c.key in values) || !canEdit_(c, role)) return;
     var v = values[c.key];
-    if (c.type === 'number' && v !== null && v !== '' && !isFinite(Number(v))) fail_('INVALID', c.label + ' must be a number');
+    var bad = checkValue_(c, v); if (bad) fail_('INVALID', bad);
     out[c.key] = v;
   });
   cols.forEach(function (c) {
@@ -217,6 +217,19 @@ function safeValues_(values, cols, role, partial) {
     if (needs && (v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length))) fail_('INVALID', c.label + ' is required');
   });
   return out;
+}
+
+function checkValue_(c, v) {
+  if (v === null || v === undefined || v === '') return null;
+  var s = String(v);
+  switch (c.type) {
+    case 'email': return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s) ? null : c.label + ' must be a valid email';
+    case 'url': return /^https?:\/\/\S+$/i.test(s) ? null : c.label + ' must be a http(s) URL';
+    case 'number': return isFinite(Number(v)) ? null : c.label + ' must be a number';
+    case 'select': return !(c.options && c.options.length) || c.options.indexOf(s) >= 0 ? null : c.label + ': "' + s + '" is not an allowed option';
+    case 'multiselect': return Array.isArray(v) && (!(c.options && c.options.length) || v.every(function (x) { return c.options.indexOf(String(x)) >= 0; })) ? null : c.label + ' has an invalid option';
+  }
+  return null;
 }
 
 function writeCells_(sh, rowIdx, values, cols) {

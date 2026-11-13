@@ -2,6 +2,7 @@ import { redactRecord, sanitizePatch, can, visibleColumns } from '@/lib/auth/per
 import { DEFAULT_SCHEMA } from '@/lib/schema/defaults'
 import { recordToRow, rowToRecord, type RawRow } from '@/lib/schema/mapping'
 import type { AlumniRecord, AppUser, CellValue, ColumnDef, DataVersion, SchemaConfig } from '@/lib/schema/types'
+import { checkValue } from '@/lib/schema/validation'
 import { DataError, type DataSource, type Mutated, type Session } from './types'
 
 /**
@@ -110,6 +111,8 @@ function session(db: MockDb): Session {
 function validate(cols: ColumnDef[], values: Record<string, CellValue>, partial: boolean) {
   for (const c of cols) {
     const v = values[c.key]
+    const bad = c.key in values ? checkValue(c, v) : null
+    if (bad) throw new DataError('INVALID', bad)
     if (c.required && (!partial || c.key in values) && (v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length)))
       throw new DataError('INVALID', `${c.label} is required`)
   }
