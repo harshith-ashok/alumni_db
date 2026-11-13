@@ -34,7 +34,9 @@ export function buildRecordSchema(cols: ColumnDef[]) {
       shape[c.key] =
         c.type === 'multiselect'
           ? (s as z.ZodArray<z.ZodString>).min(1, `${c.label} is required`)
-          : s
+          : ['number', 'select', 'email', 'url'].includes(c.type)
+            ? s
+            : z.string().min(1, `${c.label} is required`)
     } else {
       shape[c.key] = s.nullable().optional()
     }
