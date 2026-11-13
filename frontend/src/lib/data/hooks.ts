@@ -1,7 +1,9 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useSession } from '@/lib/auth/useAuth'
-import { alumniQuery, schemaQuery, syncVersions } from './queries'
+import type { AlumniRecord, AppUser, CellValue, DataVersion, SchemaConfig } from '@/lib/schema/types'
+import { dataSource } from '.'
+import { alumniQuery, headersQuery, keys, schemaQuery, syncVersions, usersQuery } from './queries'
 
 export const useSchema = () => useQuery(schemaQuery(useSession().scope))
 export const useAlumni = () => useQuery(alumniQuery(useSession().scope))
@@ -21,11 +23,6 @@ export function useVersionSync() {
 }
 
 // ---- mutations (optimistic, rolled back on error, confirmed by a background refetch) ----
-
-import { useMutation } from '@tanstack/react-query'
-import { dataSource } from '.'
-import { keys } from './queries'
-import type { AlumniRecord, CellValue, DataVersion } from '@/lib/schema/types'
 
 type Values = Record<string, CellValue>
 
@@ -67,4 +64,32 @@ export function useAlumniMutations() {
     onSuccess: (r) => settle(r.version),
   })
   return { create, update, remove }
+}
+
+// ---- admin ----
+
+export const useSheetHeaders = () => useQuery(headersQuery(useSession().scope))
+export const useUsers = () => useQuery(usersQuery(useSession().scope))
+
+export function useAdminMutations() {
+  const qc = useQueryClient()
+  const { scope } = useSession()
+  const setUsers = (users: AppUser[]) => qc.setQueryData(keys.users(scope), users)
+  return {
+    saveSchema: useMutation({
+      mutationFn: (columns: SchemaConfig['columns']) => dataSource.saveSchema(columns),
+      onSuccess: (cfg) => {
+        qc.setQueryData(keys.schema(scope), cfg)
+        // re-mapping changes which sheet column feeds which field, so records must be re-read
+        void qc.invalidateQueries({ queryKey: keys.alumni(scope) })
+        void qc.invalidateQueries({ queryKey: keys.meta(scope) })
+      },
+    }),
+    upsertUser: useMutation({ mutationFn: (u: AppUser) => dataSource.upsertUser(u), onSuccess: setUsers }),
+    removeUser: useMutation({ mutationFn: (email: string) => dataSource.removeUser(email), onSuccess: setUsers }),
+    clearServerCache: useMutation({
+      mutationFn: () => dataSource.clearServerCache(),
+      onSuccess: () => { void qc.invalidateQueries({ queryKey: ['app', scope] }) },
+    }),
+  }
 }
