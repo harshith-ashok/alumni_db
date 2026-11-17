@@ -13,6 +13,17 @@ Pick a demo role on the login screen. Data lives in your browser's localStorage 
 sheet (rows keyed by header text), so you can try the re-mapping flow: Admin → *Sync & cache* →
 "Rename City → Location", then Admin → *Columns* and re-map the City field.
 
+## Docker
+```bash
+cp .env.example .env                       # optional: set VITE_* values and ports
+docker compose up -d --build web           # production image (nginx) -> http://localhost:8080
+docker compose --profile dev up dev        # hot-reload dev server   -> http://localhost:5173
+```
+Change `WEB_PORT` / `DEV_PORT` in `.env` if those ports are busy. `VITE_*` values are baked into the
+JS at **build** time (they're public by nature, not secrets), so rebuild after changing them:
+`docker compose up -d --build web`. The backend is Google Apps Script, so there is nothing else to run.
+Add your site's origin (e.g. `http://localhost:8080`) to the OAuth client's Authorized JavaScript origins.
+
 ## Connect a real Google Sheet
 Follow [backend/README.md](backend/README.md), then set `frontend/.env.local`
 (see `frontend/.env.example`).
